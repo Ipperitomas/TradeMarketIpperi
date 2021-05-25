@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class CreateArticlesTable extends Migration
@@ -14,14 +15,23 @@ class CreateArticlesTable extends Migration
     public function up()
     {
         Schema::dropIfExists('articles');
+        Schema::dropIfExists('rubros');
+        
+        Schema::create('rubros', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('nombre',255)->nullable();
+            $table->timestamps();
+        });
 
         Schema::create('articles', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('rubro');
-            $table->string('nombre',255)->nullable(NULL);
-            $table->string('descripcion',255)->nullable(NULL);
-            $table->string('codigo',255)->nullable(NULL);
-            $table->text('caracteristicas',500)->nullable(NULL);
+            $table->unsignedBigInteger('rubro_id');
+            $table->foreign('rubro_id')->references('id')->on('rubros');
+            $table->string('nombre',255)->nullable();
+            $table->string('descripcion',255)->nullable();
+            $table->string('codigo',255)->nullable();
+            $table->bigInteger('cantidad')->nullable();
+            $table->text('caracteristicas',500)->nullable();
             $table->timestamps();
         });
     }
@@ -33,6 +43,8 @@ class CreateArticlesTable extends Migration
      */
     public function down()
     {
+        DB::statement('SET FOREIGN_KEY_CHECKS = 0');
         Schema::dropIfExists('articles');
+        DB::statement('SET FOREIGN_KEY_CHECKS = 1');
     }
 }

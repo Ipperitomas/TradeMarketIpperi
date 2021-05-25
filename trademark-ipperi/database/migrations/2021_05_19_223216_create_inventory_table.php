@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class CreateInventoryTable extends Migration
@@ -13,19 +14,32 @@ class CreateInventoryTable extends Migration
      */
     public function up()
     {
-        //Schema::dropIfExists('inventory');
+        DB::statement('SET FOREIGN_KEY_CHECKS = 0');
 
-        Schema::create('inventory', function (Blueprint $table) {
+        Schema::dropIfExists('inventory_cabecera');
+        
+
+        Schema::create('inventory_cabecera', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('article_id');
-            $table->string('nombre',255)->nullable(NULL);
-            $table->bigInteger('cantidad');
-            $table->float('p_unitario')->nullable(NULL);
-            $table->float('p_total')->nullable(NULL);
+            $table->date('fecha');
             $table->enum('tipo_accion',['COMPRA','VENTA'])->default('COMPRA');
-            $table->text('data',500)->nullable(NULL);
+            $table->json('data')->nullable();
             $table->timestamps();
         });
+        
+        Schema::dropIfExists('inventory_renglones');
+        
+        Schema::create('inventory_renglones', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('cabecera_id');
+            $table->foreign('cabecera_id')->references('id')->on('inventory_cabecera');
+            $table->unsignedBigInteger('articulo_id');
+            $table->foreign('articulo_id')->references('id')->on('articles');
+            $table->bigInteger('cantidad');
+            $table->timestamps();
+        });
+        DB::statement('SET FOREIGN_KEY_CHECKS = 1');
+
     }
 
     /**
@@ -35,6 +49,9 @@ class CreateInventoryTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('inventory');
+        DB::statement('SET FOREIGN_KEY_CHECKS = 0');
+        Schema::dropIfExists('inventory_cabecera');
+        Schema::dropIfExists('inventory_renglones');
+        DB::statement('SET FOREIGN_KEY_CHECKS = 1');
     }
 }

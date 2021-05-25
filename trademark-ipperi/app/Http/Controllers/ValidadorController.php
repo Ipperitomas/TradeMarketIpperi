@@ -8,7 +8,7 @@ class ValidadorController extends Controller
 {
     //  
     private $diccionario_keys_articles = array(
-        "rubro"=>array("type"=>"int","obligatorio"=>true),
+        "rubro_id"=>array("type"=>"string","obligatorio"=>true),
         "nombre"=>array("type"=>"string","obligatorio"=>true),
         "descripcion"=>array("type"=>"string","obligatorio"=>true),
         "caracteristicas"=>array("type"=>"string","obligatorio"=>true),
@@ -24,7 +24,6 @@ class ValidadorController extends Controller
                     if($value_articles['obligatorio']){    
                         if($key == $key_articles){
                             if($value_articles['type'] == "int"){
-                                
                                 if(!is_int($value)){
                                     $this->msgerr[$key] = " El dato debe ser un entero";    
                                 }
@@ -32,8 +31,6 @@ class ValidadorController extends Controller
                                     $this->msgerr[$key] = " El dato debe ser un string";    
                                 }
                             }
-                        }else{
-                            $this->msgerr[$key] = "Dato no proporcionado";
                         }
                     }else{
                         $this->msgerr[$key] = "Dato no proporcionado";
@@ -41,7 +38,5 @@ class ValidadorController extends Controller
                 }
             }
         }
-        
-
     }
 }

@@ -4,9 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Articles;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ValidadorController;
+use Illuminate\Database\Eloquent\Model;
 class ArticlesController extends ApiResponseController
 {
+
+    protected $msgerr = null;
     /**
      * Display a listing of the resource.
      *
@@ -17,7 +21,11 @@ class ArticlesController extends ApiResponseController
     {
         $articles_all = false;
         try {
-            $articles_all = Articles::all();
+            if($request->input('all','')){
+                $articles_all = Articles::all();
+            }else{
+                $articles_all = DB::table('articles')->orderBy('id','asc')->paginate(15);
+            }
             return $this->sendResponse(200,$articles_all," Se encontraron los registros exisosamente");
         } catch (\Exception $e) {
             throw $e;
@@ -44,18 +52,33 @@ class ArticlesController extends ApiResponseController
      */
     public function store(Request $request)
     {
-       $data_post = $request->post();
-       $validador = new ValidadorController();
-       //var_dump($data_post);
-       if(!is_array($data_post) or empty($data_post)){
+        try {
+        $data_post = $request->post();
+        // $validador = new ValidadorController();
+        if(!is_array($data_post) or empty($data_post)){
             return $this->sendResponse(404,null,"Datos incompletos.");
-       }
-       $validador->Validar("articles",$data_post);
-       var_dump($validador->msgerr);
-       if(is_array($validador->msgerr) && !empty($validador->msgerr)){
-        return $this->sendResponse(406,null,$validador->msgerr);
-       }
-       
+        }
+        // $validador->Validar("articles",$data_post);
+        
+        $reg_articles = array();
+        $reg_articles['rubro_id'] = (isset($data_post['rubro_id'])) ? $data_post['rubro_id'] : $this->msgerr['rubro_id']="Dato no proporcionado."; 
+        $reg_articles['nombre'] = (isset($data_post['nombre'])) ? $data_post['nombre'] : $this->msgerr['nombre']="Dato no proporcionado."; 
+        $reg_articles['descripcion'] = (isset($data_post['descripcion'])) ? $data_post['descripcion'] : $this->msgerr['descripcion']="Dato no proporcionado."; 
+        $reg_articles['codigo'] = (isset($data_post['codigo'])) ? $data_post['codigo'] : $this->msgerr['codigo']="Dato no proporcionado."; 
+        $reg_articles['caracteristicas'] = (isset($data_post['caracteristicas'])) ? $data_post['caracteristicas'] : $this->msgerr['caracteristicas']="Dato no proporcionado."; 
+        
+        if(is_array($this->msgerr) && !empty($this->msgerr)){
+            return $this->sendResponse(406,null,$this->msgerr);
+        }
+        if(Articles::create($reg_articles)){
+            return $this->sendResponse(200,null,"Producto creado correctamente");
+        }else{
+            return $this->sendResponse(406,null,"No se pudo crear el producto indicado.");
+        }
+        }catch (\Exception $e) {
+            throw $e;
+            return $this->sendResponse(404,null,$e);
+        }
     }
 
     /**
@@ -64,11 +87,33 @@ class ArticlesController extends ApiResponseController
      * @param  \App\Models\Articles  $articles
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Request $request,$id)
     {
+        
+        $reg = '/^([0-9])*$/';
         $articles_all = false;
         try {
-            $articles_all = Articles::find($id);
+            $uri = $request->path();
+            $uri_complete = explode("/",$uri);
+            if(isset($uri_complete[2])){
+                if(preg_match($reg,$uri_complete[2])){
+                    $articles_all = Articles::find($uri_complete[2]);
+                }else{
+                    switch (mb_strtolower($uri_complete[2])) {
+                        case 'getbyname':
+                            $name = $request->input('name');
+                            $articles_all = Articles::where('Nombre',$name)->get();
+                        break;
+                        
+                        default:
+                            
+                        break;
+                    }
+                }
+            }else{
+                return $this->sendResponse(404,null,"Url invalida");
+            }
+            
             if(!empty($articles_all)){
                 return $this->sendResponse(200,$articles_all," Se encontraron los registros exisosamente");
             }else{
@@ -78,7 +123,7 @@ class ArticlesController extends ApiResponseController
             throw $e;
             return $this->sendResponse(404,null,$e);
         }
-    }
+    }   
 
     /**
      * Show the form for editing the specified resource.
@@ -88,7 +133,6 @@ class ArticlesController extends ApiResponseController
      */
     public function edit(Articles $articles)
     {
-        //
     }
 
     /**
@@ -100,7 +144,9 @@ class ArticlesController extends ApiResponseController
      */
     public function update(Request $request, Articles $articles)
     {
-        //
+        $nombre = $request->all();
+        var_dump($nombre);
+        
     }
 
     /**

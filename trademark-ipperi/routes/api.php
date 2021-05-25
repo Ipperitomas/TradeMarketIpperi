@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Articles;
 use App\Http\Controllers\ArticlesController;
+use App\Http\Controllers\RubrosController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -23,3 +24,9 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 //Route::resource('motos','\App\Http\Controllers\MotosController');
 
 Route::resource('products', ArticlesController::class);
+Route::middleware('prlist')->get('products/list',function (Request $request) {
+    return "List";
+});
+Route::resource('rubros', RubrosController::class);
+
+// Route::resource('registro', RubrosController::class);
