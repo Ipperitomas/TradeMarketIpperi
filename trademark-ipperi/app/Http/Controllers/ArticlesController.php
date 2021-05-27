@@ -7,10 +7,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ValidadorController;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
+
 class ArticlesController extends ApiResponseController
 {
 
     protected $msgerr = null;
+    
     /**
      * Display a listing of the resource.
      *
@@ -53,28 +56,28 @@ class ArticlesController extends ApiResponseController
     public function store(Request $request)
     {
         try {
-        $data_post = $request->post();
-        // $validador = new ValidadorController();
-        if(!is_array($data_post) or empty($data_post)){
-            return $this->sendResponse(404,null,"Datos incompletos.");
-        }
-        // $validador->Validar("articles",$data_post);
-        
-        $reg_articles = array();
-        $reg_articles['rubro_id'] = (isset($data_post['rubro_id'])) ? $data_post['rubro_id'] : $this->msgerr['rubro_id']="Dato no proporcionado."; 
-        $reg_articles['nombre'] = (isset($data_post['nombre'])) ? $data_post['nombre'] : $this->msgerr['nombre']="Dato no proporcionado."; 
-        $reg_articles['descripcion'] = (isset($data_post['descripcion'])) ? $data_post['descripcion'] : $this->msgerr['descripcion']="Dato no proporcionado."; 
-        $reg_articles['codigo'] = (isset($data_post['codigo'])) ? $data_post['codigo'] : $this->msgerr['codigo']="Dato no proporcionado."; 
-        $reg_articles['caracteristicas'] = (isset($data_post['caracteristicas'])) ? $data_post['caracteristicas'] : $this->msgerr['caracteristicas']="Dato no proporcionado."; 
-        
-        if(is_array($this->msgerr) && !empty($this->msgerr)){
-            return $this->sendResponse(406,null,$this->msgerr);
-        }
-        if(Articles::create($reg_articles)){
-            return $this->sendResponse(200,null,"Producto creado correctamente");
-        }else{
-            return $this->sendResponse(406,null,"No se pudo crear el producto indicado.");
-        }
+            $data_post = $request->post();
+            // $validador = new ValidadorController();
+            if(!is_array($data_post) or empty($data_post)){
+                return $this->sendResponse(404,null,"Datos incompletos.");
+            }
+            // $validador->Validar("articles",$data_post);
+            
+            $reg_articles = array();
+            $reg_articles['rubro_id'] = (isset($data_post['rubro_id'])) ? $data_post['rubro_id'] : $this->msgerr['rubro_id']="Dato no proporcionado."; 
+            $reg_articles['nombre'] = (isset($data_post['nombre'])) ? $data_post['nombre'] : $this->msgerr['nombre']="Dato no proporcionado."; 
+            $reg_articles['descripcion'] = (isset($data_post['descripcion'])) ? $data_post['descripcion'] : $this->msgerr['descripcion']="Dato no proporcionado."; 
+            $reg_articles['codigo'] = (isset($data_post['codigo'])) ? $data_post['codigo'] : $this->msgerr['codigo']="Dato no proporcionado."; 
+            $reg_articles['caracteristicas'] = (isset($data_post['caracteristicas'])) ? $data_post['caracteristicas'] : $this->msgerr['caracteristicas']="Dato no proporcionado."; 
+            
+            if(is_array($this->msgerr) && !empty($this->msgerr)){
+                return $this->sendResponse(406,null,$this->msgerr);
+            }
+            if(Articles::create($reg_articles)){
+                return $this->sendResponse(200,null,"Articulo creado correctamente");
+            }else{
+                return $this->sendResponse(406,null,"No se pudo crear el Articulo indicado.");
+            }
         }catch (\Exception $e) {
             throw $e;
             return $this->sendResponse(404,null,$e);
@@ -90,13 +93,13 @@ class ArticlesController extends ApiResponseController
     public function show(Request $request,$id)
     {
         
-        $reg = '/^([0-9])*$/';
+        $preg = '/^([0-9])*$/';
         $articles_all = false;
         try {
             $uri = $request->path();
             $uri_complete = explode("/",$uri);
             if(isset($uri_complete[2])){
-                if(preg_match($reg,$uri_complete[2])){
+                if(preg_match($preg,$uri_complete[2])){
                     $articles_all = Articles::find($uri_complete[2]);
                 }else{
                     switch (mb_strtolower($uri_complete[2])) {
@@ -142,10 +145,29 @@ class ArticlesController extends ApiResponseController
      * @param  \App\Models\Articles  $articles
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Articles $articles)
+    public function update(Request $request, Articles $articles,$id)
     {
-        $nombre = $request->all();
-        var_dump($nombre);
+        try {
+            $reg = array();
+            $articulo = Articles::find($id);
+            $valores_send = $request->all();
+            $columns = Schema::getColumnListing('articles');
+            foreach ($columns as $key => $value) {
+                if(isset($valores_send[$value]) && !empty($valores_send[$value])){
+                    $reg[$value] = $valores_send[$value];
+                }
+            }
+            var_dump($reg);
+            if(Articles::where('id',$id)->update($reg)){
+                return $this->sendResponse(200,Articles::find($id),"Articulo actualizado correctamente.");
+            }else{
+                return $this->sendResponse(404,null,"No se pudo editar el Articulo N° ".$id);
+            }
+        } catch (\Exception $e) {
+            throw $e;
+            return $this->sendResponse(404,null,$e);
+        }
+        
         
     }
 
