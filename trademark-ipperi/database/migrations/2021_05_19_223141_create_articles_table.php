@@ -30,7 +30,7 @@ class CreateArticlesTable extends Migration
             $table->string('nombre',255)->nullable();
             $table->string('descripcion',255)->nullable();
             $table->string('codigo',255)->nullable();
-            $table->bigInteger('cantidad')->nullable();
+            $table->decimal('precio')->nullable();
             $table->text('caracteristicas',500)->nullable();
             $table->timestamps();
         });

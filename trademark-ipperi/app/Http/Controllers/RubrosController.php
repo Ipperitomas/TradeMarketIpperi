@@ -8,8 +8,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Model;
 
-class RubrosController extends Controller
+class RubrosController extends ApiResponseController
 {
+    protected $msgerr = null;
+
     /**
      * Display a listing of the resource.
      *
@@ -61,8 +63,8 @@ class RubrosController extends Controller
             if(is_array($this->msgerr) && !empty($this->msgerr)){
                 return $this->sendResponse(406,null,$this->msgerr);
             }
-            if(Rubros::create($reg_rubros)){
-                return $this->sendResponse(200,null,"Rubro creado correctamente");
+            if($last_id = Rubros::create($reg_rubros)->id){
+                return $this->sendResponse(200,array("last_id"=>$last_id),"Rubro creado correctamente");
             }else{
                 return $this->sendResponse(406,null,"No se pudo crear el Rubro indicado.");
             }
@@ -142,10 +144,11 @@ class RubrosController extends Controller
             $columns = Schema::getColumnListing('rubros');
             foreach ($columns as $key => $value) {
                 if(isset($valores_send[$value]) && !empty($valores_send[$value])){
-                    $reg[$value] = $valores_send[$value];
+                    if($value != "id"){
+                        $reg[$value] = $valores_send[$value];
+                    }
                 }
             }
-            var_dump($reg);
             if(Rubros::where('id',$id)->update($reg)){
                 return $this->sendResponse(200,Rubros::find($id),"Rubro actualizado correctamente.");
             }else{

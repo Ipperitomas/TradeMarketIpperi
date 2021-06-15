@@ -39,7 +39,7 @@ class ArticleSeeder extends Seeder
                 'nombre'=> $faker->name,
                 'descripcion'=>$faker->text(200),
                 'codigo'=>$faker->numberBetween(000000,5555555),
-                'cantidad'=>$faker->numberBetween(1,200),
+                'precio'=>$faker->numberBetween(1,200),
                 'caracteristicas'=>$faker->text(200),
                 'created_at'=>$faker->dateTimeBetween(),
                 'updated_at'=>$faker->dateTimeBetween(),

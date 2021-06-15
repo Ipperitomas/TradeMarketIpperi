@@ -9,4 +9,6 @@ use Illuminate\Support\Facades\DB;
 class Rubros extends Model
 {
     use HasFactory;
+    protected $fillable = ["nombre"];
+
 }

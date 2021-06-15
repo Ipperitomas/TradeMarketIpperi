@@ -44,7 +44,7 @@ class ArticlesController extends ApiResponseController
      */
     public function create()
     {
-        //
+        
     }
 
     /**
@@ -66,18 +66,20 @@ class ArticlesController extends ApiResponseController
             $reg_articles = array();
             $reg_articles['rubro_id'] = (isset($data_post['rubro_id'])) ? $data_post['rubro_id'] : $this->msgerr['rubro_id']="Dato no proporcionado."; 
             $reg_articles['nombre'] = (isset($data_post['nombre'])) ? $data_post['nombre'] : $this->msgerr['nombre']="Dato no proporcionado."; 
-            $reg_articles['descripcion'] = (isset($data_post['descripcion'])) ? $data_post['descripcion'] : $this->msgerr['descripcion']="Dato no proporcionado."; 
+            $reg_articles['descripcion'] = (isset($data_post['descripcion'])) ? $data_post['descripcion'] : "";
             $reg_articles['codigo'] = (isset($data_post['codigo'])) ? $data_post['codigo'] : $this->msgerr['codigo']="Dato no proporcionado."; 
-            $reg_articles['caracteristicas'] = (isset($data_post['caracteristicas'])) ? $data_post['caracteristicas'] : $this->msgerr['caracteristicas']="Dato no proporcionado."; 
+            $reg_articles['caracteristicas'] = (isset($data_post['caracteristicas'])) ? $data_post['caracteristicas'] : ""; 
+            $reg_articles['precio'] = (isset($data_post['precio'])) ? $data_post['precio'] : $this->msgerr['precio']="Dato no proporcionado."; 
             
             if(is_array($this->msgerr) && !empty($this->msgerr)){
                 return $this->sendResponse(406,null,$this->msgerr);
             }
-            if(Articles::create($reg_articles)){
-                return $this->sendResponse(200,null,"Articulo creado correctamente");
+            if($last_insert = Articles::create($reg_articles)->id){
+                return $this->sendResponse(200,array("last_id"=>$last_insert),"Articulo creado correctamente");
             }else{
                 return $this->sendResponse(406,null,"No se pudo crear el Articulo indicado.");
             }
+
         }catch (\Exception $e) {
             throw $e;
             return $this->sendResponse(404,null,$e);

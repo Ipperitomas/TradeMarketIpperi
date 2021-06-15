@@ -8,7 +8,7 @@ class ApiResponseController extends Controller
 {
     //
 
-    public function sendResponse($code,$result, $message)
+    public function sendResponse($code,$result, $message = "")
     {
         
         $response = [
@@ -17,6 +17,5 @@ class ApiResponseController extends Controller
             'message' => $message,
         ];
         return response()->json($response, $code);
-        var_dump($response);
     }
 }

@@ -9,6 +9,6 @@ use Illuminate\Support\Facades\DB;
 class Articles extends Model
 {
     use HasFactory;
-    protected $fillable = ["rubro_id","nombre","descripcion","caracteristicas","codigo"];
+    protected $fillable = ["rubro_id","nombre","descripcion","caracteristicas","codigo","precio"];
 
 }
