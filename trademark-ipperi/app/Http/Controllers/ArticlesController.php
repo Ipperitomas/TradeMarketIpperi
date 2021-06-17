@@ -66,10 +66,13 @@ class ArticlesController extends ApiResponseController
             $reg_articles = array();
             $reg_articles['rubro_id'] = (isset($data_post['rubro_id'])) ? $data_post['rubro_id'] : $this->msgerr['rubro_id']="Dato no proporcionado."; 
             $reg_articles['nombre'] = (isset($data_post['nombre'])) ? $data_post['nombre'] : $this->msgerr['nombre']="Dato no proporcionado."; 
-            $reg_articles['descripcion'] = (isset($data_post['descripcion'])) ? $data_post['descripcion'] : "";
             $reg_articles['codigo'] = (isset($data_post['codigo'])) ? $data_post['codigo'] : $this->msgerr['codigo']="Dato no proporcionado."; 
-            $reg_articles['caracteristicas'] = (isset($data_post['caracteristicas'])) ? $data_post['caracteristicas'] : ""; 
             $reg_articles['precio'] = (isset($data_post['precio'])) ? $data_post['precio'] : $this->msgerr['precio']="Dato no proporcionado."; 
+            $reg_articles['stock_max'] = (isset($data_post['stock_max'])) ? $data_post['stock_max'] : $this->msgerr['stock_max']="Dato no proporcionado."; 
+            $reg_articles['stock_min'] = (isset($data_post['stock_min'])) ? $data_post['stock_min'] : $this->msgerr['stock_min']="Dato no proporcionado."; 
+            $reg_articles['precio'] = (isset($data_post['precio'])) ? $data_post['precio'] : $this->msgerr['precio']="Dato no proporcionado."; 
+            $reg_articles['descripcion'] = (isset($data_post['descripcion'])) ? $data_post['descripcion'] : "";
+            $reg_articles['caracteristicas'] = (isset($data_post['caracteristicas'])) ? $data_post['caracteristicas'] : ""; 
             
             if(is_array($this->msgerr) && !empty($this->msgerr)){
                 return $this->sendResponse(406,null,$this->msgerr);
@@ -159,7 +162,7 @@ class ArticlesController extends ApiResponseController
                     $reg[$value] = $valores_send[$value];
                 }
             }
-            var_dump($reg);
+            //var_dump($reg);
             if(Articles::where('id',$id)->update($reg)){
                 return $this->sendResponse(200,Articles::find($id),"Articulo actualizado correctamente.");
             }else{

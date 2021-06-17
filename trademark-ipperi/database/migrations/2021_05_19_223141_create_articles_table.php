@@ -31,6 +31,8 @@ class CreateArticlesTable extends Migration
             $table->string('descripcion',255)->nullable();
             $table->string('codigo',255)->nullable();
             $table->decimal('precio')->nullable();
+            $table->integer('stock_max')->nullable();
+            $table->integer('stock_min')->nullable();
             $table->text('caracteristicas',500)->nullable();
             $table->timestamps();
         });

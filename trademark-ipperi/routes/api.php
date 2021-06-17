@@ -21,10 +21,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-//Route::resource('motos','\App\Http\Controllers\MotosController');
-
 Route::resource('products', ArticlesController::class);
 Route::resource('rubros', RubrosController::class);
 // Route::resource('inventory', RubrosController::class);
-
 // Route::resource('registro', RubrosController::class);
