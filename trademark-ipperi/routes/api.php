@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Articles;
 use App\Http\Controllers\ArticlesController;
+use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\RubrosController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -23,5 +24,5 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::resource('products', ArticlesController::class);
 Route::resource('rubros', RubrosController::class);
-// Route::resource('inventory', RubrosController::class);
+Route::resource('inventory', InventoryController::class);
 // Route::resource('registro', RubrosController::class);
