@@ -60,9 +60,10 @@ class RubrosController extends ApiResponseController
             
             $reg_rubros = array();
             $reg_rubros['nombre'] = (isset($data_post['nombre'])) ? $data_post['nombre'] : $this->msgerr['nombre']="Dato no proporcionado."; 
-            if(Rubros::where("nombre",mb_strtolower($reg_rubros['nombre']))){
-                $this->msgerr['error'] = " El Rubro que intenta crear ya existe";
-            }
+            //hacer este control
+            // if(Rubros::where("nombre",mb_strtolower($reg_rubros['nombre']))){
+            //     $this->msgerr['error'] = " El Rubro que intenta crear ya existe";
+            // }
             if(is_array($this->msgerr) && !empty($this->msgerr)){
                 return $this->sendResponse(406,null,$this->msgerr);
             }
