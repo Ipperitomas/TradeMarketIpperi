@@ -30,9 +30,9 @@ class InventoryController extends ApiResponseController
             }
 
             if($request->input('all','')){
-                $inventory_all = Rubros::all();
+                
             }else{
-                $sql = " SELECT inventory_renglones.id , inventory_cabecera.fecha , articles.nombre as 'nombre_articulo' , rubros.nombre as 'nombre_rubro' , inventory_renglones.cantidad , articles.precio , (articles.precio*inventory_renglones.cantidad) as 'p_total' FROM inventory_renglones , inventory_cabecera , articles , rubros WHERE inventory_renglones.cabecera_id = inventory_cabecera.id AND inventory_renglones.articulo_id = articles.id AND articles.rubro_id = rubros.id";
+                $sql = " SELECT inventory_renglones.id , inventory_cabecera.tipo_accion , inventory_cabecera.fecha , articles.nombre as 'nombre_articulo' , rubros.nombre as 'nombre_rubro' , inventory_renglones.cantidad , articles.precio , (articles.precio*inventory_renglones.cantidad) as 'p_total' FROM inventory_renglones , inventory_cabecera , articles , rubros WHERE inventory_renglones.cabecera_id = inventory_cabecera.id AND inventory_renglones.articulo_id = articles.id AND articles.rubro_id = rubros.id";
                 if($page){
                     $form = ($limit*$page)-$limit;
 				    $to = $limit*$page;
@@ -43,36 +43,8 @@ class InventoryController extends ApiResponseController
                 $inventory_all = DB::select($sql);
                 $links = array();
                 $cantidad = DB::select("SELECT COUNT(FOUND_ROWS()) AS `cantidad` FROM inventory_renglones");
-                $i = 0;
-                if($cantidad[0]->cantidad > $limit){
-                    $links[$i]["url"] = null; 
-                    $links[$i]["label"] = "Previous"; 
-                    $links[$i]["active"] = false; 
-                    $cant_pages = ceil($cantidad[0]->cantidad/$page);
-                    for ($i=1; $i < $cant_pages; $i++) { 
-                        $links[$i]["url"] = url('/')."/".$request->path()."?page=".$i; 
-                        $links[$i]["label"] = $i; 
-                        $links[$i]["active"] = false;     
-                    }
-                    $links[$i]["url"] = null; 
-                    $links[$i]["label"] = "Next"; 
-                    $links[$i]["active"] = false; 
-                    
-                }else{
-                    $cant_pages = 1;
-
-                    $links[$i]["url"] = null; 
-                    $links[$i]["label"] = "Previous"; 
-                    $links[$i]["active"] = false; 
-                    $i++;
-                    $links[$i]["url"] = url('/')."/".$request->path()."?page=".$cant_pages;; 
-                    $links[$i]["label"] = "1"; 
-                    $links[$i]["active"] = true; 
-                    $i++;
-                    $links[$i]["url"] = null; 
-                    $links[$i]["label"] = "Next"; 
-                    $links[$i]["active"] = false; 
-                }
+                
+                $links = $this->ArmarLinks($cantidad,$limit,$page,$request);
                 $response = array("current_page"=>$page,"data"=>$inventory_all,"links"=>$links);
 
             }
@@ -81,6 +53,44 @@ class InventoryController extends ApiResponseController
             throw $e;
             return $this->sendResponse(404,null,$e);
         }
+    }
+
+
+    private function ArmarLinks($cantidad,$limit,$page,$request){
+        $i = 0;
+        $links = array();
+        if($cantidad[0]->cantidad > $limit){
+            $links[$i]["url"] = null; 
+            $links[$i]["label"] = "Previous"; 
+            $links[$i]["active"] = false; 
+            $cant_pages = ceil($cantidad[0]->cantidad/$page);
+            for ($i=1; $i < $cant_pages; $i++) { 
+                $links[$i]["url"] = url('/')."/".$request->path()."?page=".$i; 
+                $links[$i]["label"] = $i; 
+                $links[$i]["active"] = false;     
+            }
+            $links[$i]["url"] = null; 
+            $links[$i]["label"] = "Next"; 
+            $links[$i]["active"] = false; 
+            
+        }else{
+            $cant_pages = 1;
+
+            $links[$i]["url"] = null; 
+            $links[$i]["label"] = "Previous"; 
+            $links[$i]["active"] = false; 
+            $i++;
+            $links[$i]["url"] = url('/')."/".$request->path()."?page=".$cant_pages;; 
+            $links[$i]["label"] = "1"; 
+            $links[$i]["active"] = true; 
+            $i++;
+            $links[$i]["url"] = null; 
+            $links[$i]["label"] = "Next"; 
+            $links[$i]["active"] = false; 
+        }
+
+        return $links;
+
     }
 
     /**
@@ -120,9 +130,7 @@ class InventoryController extends ApiResponseController
 
             $cabecera = $data_post['cabecera'];
             $reg_cabecera['fecha'] = (isset($cabecera['accion'])) ? $cabecera['fecha'] : $this->msgerr['fecha'] = "No se indico la fecha";
-            // if(!Validator::date($reg_cabecera['fecha'])){
-            //     $this->msgerr['fecha'] = "La fecha es invalida.";
-            // }
+            $reg_cabecera['nro_comprobante'] = (isset($cabecera['nro_comprobante'])) ? $cabecera['nro_comprobante'] : $this->msgerr['nro_comprobante'] = "No se indico el nro_comprobante";
             
             $reg_cabecera['tipo_accion'] = (isset($cabecera['accion'])) ? $cabecera['accion'] : $this->msgerr['accion'] = "No se indico la accion";
             
@@ -161,9 +169,47 @@ class InventoryController extends ApiResponseController
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($id,Request $request)
     {
-        //
+        
+        $page = 1;
+        $limit = 10;
+        if($id == "heads"){
+            try {
+                if($request->input('page','')){
+                    $page = $request->input('page','');
+                }
+
+                if($request->input('limit','')){
+                    $limit = $request->input('limit','');
+                }
+    
+                if($request->input('all','')){
+                    
+                }else{
+                    $sql = " SELECT * FROM  inventory_cabecera ";
+                    if($page){
+                        $form = ($limit*$page)-$limit;
+                        $to = $limit*$page;
+                        $limit_sql = ' LIMIT '.$form.",".$to;
+                    }
+                    
+                    $sql = $sql.$limit_sql;
+                    $inventory_all = DB::select($sql);
+                    $links = array();
+                    $cantidad = DB::select("SELECT COUNT(FOUND_ROWS()) AS `cantidad` FROM inventory_cabecera");
+                    
+                    $links = $this->ArmarLinks($cantidad,$limit,$page,$request);
+                    $response = array("current_page"=>$page,"data"=>$inventory_all,"links"=>$links);
+    
+                }
+                return $this->sendResponse(200,$response," Se encontraron registros exisosamente");
+            } catch (\Exception $e) {
+                throw $e;
+                return $this->sendResponse(404,null,$e);
+            }
+
+        }
     }
 
     /**

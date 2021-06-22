@@ -22,6 +22,7 @@ class CreateInventoryTable extends Migration
         Schema::create('inventory_cabecera', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->date('fecha');
+            $table->string('nro_comprobante',255);
             $table->enum('tipo_accion',['COMPRA','VENTA'])->default('COMPRA');
             $table->json('data')->nullable();
             $table->timestamps();
