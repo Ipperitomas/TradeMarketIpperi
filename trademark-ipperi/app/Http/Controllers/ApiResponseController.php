@@ -22,11 +22,12 @@ class ApiResponseController extends Controller
     public function ArmarLinks($cantidad,$limit,$page,$request){
         $i = 0;
         $links = array();
-        if($cantidad[0]->cantidad > $limit){
+
+        if($cantidad > $limit){
             $links[$i]["url"] = null; 
             $links[$i]["label"] = "Previous"; 
             $links[$i]["active"] = false; 
-            $cant_pages = ceil($cantidad[0]->cantidad/$page);
+            $cant_pages = ceil($cantidad/$page);
             for ($i=1; $i < $cant_pages; $i++) { 
                 $links[$i]["url"] = url('/')."/".$request->path()."?page=".$i; 
                 $links[$i]["label"] = $i; 

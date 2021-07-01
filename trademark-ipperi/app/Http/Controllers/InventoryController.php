@@ -43,7 +43,7 @@ class InventoryController extends ApiResponseController
                 $inventory_all = DB::select($sql);
                 $links = array();
                 $cantidad = DB::select("SELECT COUNT(FOUND_ROWS()) AS `cantidad` FROM inventory_renglones");
-                
+                $cantidad = $cantidad[0]->cantidad;
                 $links = $this->ArmarLinks($cantidad,$limit,$page,$request);
                 $response = array("current_page"=>$page,"data"=>$inventory_all,"links"=>$links);
 
@@ -170,7 +170,7 @@ class InventoryController extends ApiResponseController
                     $inventory_all = DB::select($sql);
                     $links = array();
                     $cantidad = DB::select("SELECT COUNT(FOUND_ROWS()) AS `cantidad` FROM inventory_cabecera");
-                    
+                    $cantidad = $cantidad[0]->cantidad;
                     $links = $this->ArmarLinks($cantidad,$limit,$page,$request);
                     $response = array("current_page"=>$page,"data"=>$inventory_all,"links"=>$links);
     

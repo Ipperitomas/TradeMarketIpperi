@@ -62,7 +62,8 @@ class ArticlesController extends ApiResponseController
                 $sql = $sql.$where.$limit_sql;
                 $articles_all = DB::select($sql);
                 $links = array();
-                $cantidad = DB::select("SELECT COUNT(FOUND_ROWS()) AS `cantidad` FROM articles");
+                $cantidad = Articles::all()->count();
+                
                 
                 $links = $this->ArmarLinks($cantidad,$limit,$page,$request);
                 $response = array("current_page"=>$page,"data"=>$articles_all,"links"=>$links);
