@@ -17,16 +17,51 @@ class RubrosController extends ApiResponseController
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function index(Request $request,$rs_ws = true)
     {
         $rubros_all = false;
+        $page = 1;
+        $limit = 15;
+        $where = "";
         try {
-            if($request->input('all','')){
-                $rubros_all = Rubros::all();
+            if($request->input('page','') == "all"){
+                $response = Rubros::all();
             }else{
-                $rubros_all = DB::table('rubros')->orderBy('id','asc')->paginate(15);
+                if($request->input('page','')){
+                    $page = $request->input('page','');
+                }
+    
+                if($request->input('limit','')){
+                    $limit = $request->input('limit','');
+                }
+
+                
+                if($request->input('nombre','')){
+                    $nombre = $request->input('nombre','');
+                    $where .= " AND `rubros`.`nombre` LIKE '%".$nombre."%'";;
+                }
+
+                $sql = " SELECT rubros.* FROM rubros WHERE 1 = 1";
+                if($page){
+                    $form = ($limit*$page)-$limit;
+				    $to = $limit*$page;
+				    $limit_sql = ' LIMIT '.$form.",".$to;
+                }
+                
+                $sql = $sql.$where.$limit_sql;
+                $rubros_all = DB::select($sql);
+                $links = array();
+                $cantidad = DB::select("SELECT COUNT(FOUND_ROWS()) AS `cantidad` FROM articles");
+                
+                $links = $this->ArmarLinks($cantidad,$limit,$page,$request);
+                $response = array("current_page"=>$page,"data"=>$rubros_all,"links"=>$links);
             }
-            return $this->sendResponse(200,$rubros_all," Se encontraron registros exisosamente");
+            if($rs_ws){
+                return $this->sendResponse(200,$response," Se encontraron registros exisosamente");
+            }else{
+                return $response;
+            }
+                
         } catch (\Exception $e) {
             throw $e;
             return $this->sendResponse(404,null,$e);
@@ -87,7 +122,7 @@ class RubrosController extends ApiResponseController
     public function show(Request $request,$id)
     {
         $reg = '/^([0-9])*$/';
-        $articles_all = false;
+        $rubros_all = false;
         try {
             $uri = $request->path();
             $uri_complete = explode("/",$uri);
@@ -99,6 +134,9 @@ class RubrosController extends ApiResponseController
                         case 'getbyname':
                             $name = $request->input('name');
                             $rubros_all = Rubros::where('nombre',$name)->get();
+                        break;
+                        case 'all':
+                            $rubros_all = Rubros::all();
                         break;
                         
                         default:
@@ -170,8 +208,22 @@ class RubrosController extends ApiResponseController
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Request $request,$id)
     {
-        //
+        try {
+            $id = (int) $id;
+            if(empty($id) or !is_int($id)){
+                return $this->sendResponse(404,null,"No se pudo eliminar el Rubro N° ".$id);
+            }
+            if(Rubros::where('id',$id)->delete()){
+                $listado = $this->index($request,false);
+                return $this->sendResponse(200,$listado,"Rubro Eliminado correctamente.");
+            }else{
+                return $this->sendResponse(404,null,"No se pudo eliminar el Rubro N° ".$id);
+            }
+        } catch (\Exception $e) {
+            throw $e;
+            return $this->sendResponse(404,null,$e);
+        }
     }
 }

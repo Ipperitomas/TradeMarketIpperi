@@ -26,7 +26,7 @@ class CreateArticlesTable extends Migration
         Schema::create('articles', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('rubro_id');
-            $table->foreign('rubro_id')->references('id')->on('rubros');
+            $table->foreign('rubro_id')->references('id')->on('rubros')->onDelete('cascade');
             $table->string('nombre',255)->nullable();
             $table->string('descripcion',255)->nullable();
             $table->string('codigo',255)->nullable();

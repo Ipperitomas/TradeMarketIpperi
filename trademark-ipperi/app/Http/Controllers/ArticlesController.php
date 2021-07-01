@@ -20,16 +20,61 @@ class ArticlesController extends ApiResponseController
      * @return \Illuminate\Http\Response
      */
     
-    public function index(Request $request)
+    public function index(Request $request,$rs_ws = true)
     {
-        $articles_all = false;
+        $response = false;
+        $search = "";
+        $page = 1;
+        $limit = 15;
+        $where = " ";
         try {
-            if($request->input('all','')){
-                $articles_all = Articles::all();
+            if($request->input('page','') == "all"){
+                $response = Articles::all();
             }else{
-                $articles_all = DB::table('articles')->orderBy('id','asc')->paginate(15);
+                if($request->input('page','')){
+                    $page = $request->input('page','');
+                }
+    
+                if($request->input('limit','')){
+                    $limit = $request->input('limit','');
+                }
+
+                if($request->input('id','')){
+                    $id = $request->input('id','');
+                    $where .= " AND `articles`.`id` = ".$id;
+                }
+                if($request->input('nombre','')){
+                    $nombre = $request->input('nombre','');
+                    $where .= " AND `articles`.`nombre` LIKE '%".$nombre."%'";;
+                }
+                if($request->input('codigo','')){
+                    $codigo = $request->input('codigo','');
+                    $where .= " AND `articles`.`codigo` LIKE '%".$codigo."%'";
+                }
+
+                $sql = " SELECT articles.id as 'id' , articles.* , rubros.nombre as 'nombre_rubro' FROM articles , rubros WHERE articles.rubro_id = rubros.id";
+                if($page){
+                    $form = ($limit*$page)-$limit;
+				    $to = $limit*$page;
+				    $limit_sql = ' LIMIT '.$form.",".$to;
+                }
+                
+                $sql = $sql.$where.$limit_sql;
+                $articles_all = DB::select($sql);
+                $links = array();
+                $cantidad = DB::select("SELECT COUNT(FOUND_ROWS()) AS `cantidad` FROM articles");
+                
+                $links = $this->ArmarLinks($cantidad,$limit,$page,$request);
+                $response = array("current_page"=>$page,"data"=>$articles_all,"links"=>$links);
+
+                
+                
             }
-            return $this->sendResponse(200,$articles_all," Se encontraron los registros exisosamente");
+            if($rs_ws){
+                return $this->sendResponse(200,$response," Se encontraron los registros exisosamente");
+            }else{
+                return $response;
+            }
         } catch (\Exception $e) {
             throw $e;
             return $this->sendResponse(404,null,$e);
@@ -112,6 +157,9 @@ class ArticlesController extends ApiResponseController
                             $name = $request->input('name');
                             $articles_all = Articles::where('Nombre',$name)->get();
                         break;
+                        case 'all':
+                            $articles_all = Articles::all();
+                        break;
                         
                         default:
                             
@@ -182,8 +230,22 @@ class ArticlesController extends ApiResponseController
      * @param  \App\Models\Articles  $articles
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Articles $articles)
+    public function destroy(Request $request,$id)
     {
-        //
+        try {
+            $id = (int) $id;
+            if(empty($id) or !is_int($id)){
+                return $this->sendResponse(404,null,"No se pudo eliminar el Articulo N° ".$id);
+            }
+            if(Articles::where('id',$id)->delete()){
+                $listado = $this->index($request,false);
+                return $this->sendResponse(200,$listado,"Articulo Eliminado correctamente.");
+            }else{
+                return $this->sendResponse(404,null,"No se pudo Eliminar el Articulo N° ".$id);
+            }
+        } catch (\Exception $e) {
+            throw $e;
+            return $this->sendResponse(404,null,$e);
+        }
     }
 }

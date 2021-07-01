@@ -56,42 +56,7 @@ class InventoryController extends ApiResponseController
     }
 
 
-    private function ArmarLinks($cantidad,$limit,$page,$request){
-        $i = 0;
-        $links = array();
-        if($cantidad[0]->cantidad > $limit){
-            $links[$i]["url"] = null; 
-            $links[$i]["label"] = "Previous"; 
-            $links[$i]["active"] = false; 
-            $cant_pages = ceil($cantidad[0]->cantidad/$page);
-            for ($i=1; $i < $cant_pages; $i++) { 
-                $links[$i]["url"] = url('/')."/".$request->path()."?page=".$i; 
-                $links[$i]["label"] = $i; 
-                $links[$i]["active"] = false;     
-            }
-            $links[$i]["url"] = null; 
-            $links[$i]["label"] = "Next"; 
-            $links[$i]["active"] = false; 
-            
-        }else{
-            $cant_pages = 1;
-
-            $links[$i]["url"] = null; 
-            $links[$i]["label"] = "Previous"; 
-            $links[$i]["active"] = false; 
-            $i++;
-            $links[$i]["url"] = url('/')."/".$request->path()."?page=".$cant_pages;; 
-            $links[$i]["label"] = "1"; 
-            $links[$i]["active"] = true; 
-            $i++;
-            $links[$i]["url"] = null; 
-            $links[$i]["label"] = "Next"; 
-            $links[$i]["active"] = false; 
-        }
-
-        return $links;
-
-    }
+   
 
     /**
      * Show the form for creating a new resource.
@@ -174,6 +139,7 @@ class InventoryController extends ApiResponseController
         
         $page = 1;
         $limit = 10;
+        $busqueda = "";
         if($id == "heads"){
             try {
                 if($request->input('page','')){
@@ -183,18 +149,24 @@ class InventoryController extends ApiResponseController
                 if($request->input('limit','')){
                     $limit = $request->input('limit','');
                 }
-    
+                if($request->input('busqueda','')){
+                    $busqueda = $request->input('busqueda','');
+                }
                 if($request->input('all','')){
                     
                 }else{
-                    $sql = " SELECT * FROM  inventory_cabecera ";
+                    $sql = " SELECT * FROM  inventory_cabecera Where 1=1 ";
+                    $where = "";
                     if($page){
                         $form = ($limit*$page)-$limit;
                         $to = $limit*$page;
                         $limit_sql = ' LIMIT '.$form.",".$to;
                     }
+                    if($busqueda){
+                        $where = " AND `nro_comprobante` LIKE '%".$busqueda."%'";
+                    }
                     
-                    $sql = $sql.$limit_sql;
+                    $sql = $sql.$where.$limit_sql;
                     $inventory_all = DB::select($sql);
                     $links = array();
                     $cantidad = DB::select("SELECT COUNT(FOUND_ROWS()) AS `cantidad` FROM inventory_cabecera");
