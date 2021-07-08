@@ -29,22 +29,41 @@ class InventoryController extends ApiResponseController
                 $limit = $request->input('limit','');
             }
 
+            if($request->input('fecha','')){
+                $fecha = $request->input('fecha','');
+            }
+            
             if($request->input('all','')){
                 
             }else{
-                $sql = " SELECT inventory_renglones.id , inventory_cabecera.tipo_accion , inventory_cabecera.fecha , articles.nombre as 'nombre_articulo' , rubros.nombre as 'nombre_rubro' , inventory_renglones.cantidad , articles.precio , (articles.precio*inventory_renglones.cantidad) as 'p_total' FROM inventory_renglones , inventory_cabecera , articles , rubros WHERE inventory_renglones.cabecera_id = inventory_cabecera.id AND inventory_renglones.articulo_id = articles.id AND articles.rubro_id = rubros.id";
-                if($page){
+                // $sql = " SELECT inventory_renglones.id, inventory_cabecera.tipo_accion , inventory_cabecera.fecha , articles.nombre as 'nombre_articulo' , rubros.nombre as 'nombre_rubro' , inventory_renglones.cantidad , articles.precio , articles.id as 'articulo_id' 
+                //     FROM inventory_renglones , inventory_cabecera , articles , rubros 
+                //     WHERE inventory_renglones.cabecera_id = inventory_cabecera.id AND inventory_renglones.articulo_id = articles.id AND articles.rubro_id = rubros.id";
+                $group_by = " GROUP BY `renglones`.`articulo_id` ";
+                $sql = ' SELECT 
+                        IF(`articulos_resta`.`resta` > -1000,SUM(`renglones`.`cantidad`)-`articulos_resta`.`resta`,SUM(`renglones`.`cantidad`)) as cantidad,`renglones`.`articulo_id`,`articulos`.`nombre` as nombre_articulo
+                        FROM `inventory_renglones` as `renglones` INNER JOIN `inventory_cabecera` as `cabecera` ON `cabecera`.`id`=`renglones`.`cabecera_id` INNER JOIN `articles` as `articulos` ON `renglones`.`articulo_id`=`articulos`.`id` LEFT JOIN 
+                            (SELECT SUM(`renglones1`.`cantidad`) as resta,`renglones1`.`articulo_id` 
+                            FROM `inventory_renglones` as `renglones1` , `inventory_cabecera` 
+                            WHERE `inventory_cabecera`.`id` = `renglones1`.`cabecera_id` AND `inventory_cabecera`.`tipo_accion`= "VENTA" GROUP BY `renglones1`.`articulo_id`) as `articulos_resta` 
+                            ON `articulos_resta`.`articulo_id`=`renglones`.`articulo_id` WHERE `cabecera`.`tipo_accion`!= "VENTA"  ';
+                if($page && is_int($page)){
                     $form = ($limit*$page)-$limit;
 				    $to = $limit*$page;
 				    $limit_sql = ' LIMIT '.$form.",".$to;
                 }
+
+                if($fecha){
+                    $sql .= " AND cabecera.fecha <= '".$fecha."'";
+                }
+                $sql = $sql.$group_by.$limit_sql;
                 
-                $sql = $sql.$limit_sql;
                 $inventory_all = DB::select($sql);
                 $links = array();
                 $cantidad = DB::select("SELECT COUNT(FOUND_ROWS()) AS `cantidad` FROM inventory_renglones");
                 $cantidad = $cantidad[0]->cantidad;
                 $links = $this->ArmarLinks($cantidad,$limit,$page,$request);
+                
                 $response = array("current_page"=>$page,"data"=>$inventory_all,"links"=>$links);
 
             }
@@ -53,6 +72,10 @@ class InventoryController extends ApiResponseController
             throw $e;
             return $this->sendResponse(404,null,$e);
         }
+
+    }
+    private function ArmarStock($element){
+        
     }
 
 
@@ -181,6 +204,15 @@ class InventoryController extends ApiResponseController
                 return $this->sendResponse(404,null,$e);
             }
 
+        }else{
+            try {
+                $sql = " SELECT inventory_renglones.id, inventory_cabecera.nro_comprobante , inventory_cabecera.tipo_accion , inventory_cabecera.fecha , articles.nombre as 'nombre_articulo' , rubros.nombre as 'nombre_rubro' , inventory_renglones.cantidad , articles.precio , (articles.precio*inventory_renglones.cantidad) as 'p_total' FROM inventory_renglones , inventory_cabecera , articles , rubros WHERE  inventory_cabecera.id = ".$id." AND inventory_renglones.cabecera_id = inventory_cabecera.id AND inventory_renglones.articulo_id = articles.id AND articles.rubro_id = rubros.id";
+                $inventory_all = DB::select($sql);
+                return $this->sendResponse(200,$inventory_all," Se encontraron registros exisosamente");
+            } catch (\Exception $e) {
+                throw $e;
+                return $this->sendResponse(404,null,$e);
+            }
         }
     }
 

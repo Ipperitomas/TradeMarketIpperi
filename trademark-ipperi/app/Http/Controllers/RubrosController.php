@@ -52,7 +52,7 @@ class RubrosController extends ApiResponseController
                 $rubros_all = DB::select($sql);
                 $links = array();
                 $cantidad = DB::select("SELECT COUNT(FOUND_ROWS()) AS `cantidad` FROM articles");
-                
+                $cantidad = $cantidad[0]->cantidad;
                 $links = $this->ArmarLinks($cantidad,$limit,$page,$request);
                 $response = array("current_page"=>$page,"data"=>$rubros_all,"links"=>$links);
             }
