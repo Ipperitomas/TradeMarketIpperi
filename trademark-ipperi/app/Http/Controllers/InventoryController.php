@@ -19,6 +19,7 @@ class InventoryController extends ApiResponseController
         $page = 1;
         $limit = 15;
         $limit_sql = "";
+        $rubro_id = "";
         // $orden = " fecha DESC ";
         try {
             if($request->input('page','')){
@@ -32,6 +33,10 @@ class InventoryController extends ApiResponseController
             if($request->input('fecha','')){
                 $fecha = $request->input('fecha','');
             }
+            if($request->input('rubro','')){
+                $rubro_id = $request->input('rubro','');
+            }
+            
             
             if($request->input('all','')){
                 
@@ -41,12 +46,12 @@ class InventoryController extends ApiResponseController
                 //     WHERE inventory_renglones.cabecera_id = inventory_cabecera.id AND inventory_renglones.articulo_id = articles.id AND articles.rubro_id = rubros.id";
                 $group_by = " GROUP BY `renglones`.`articulo_id` ";
                 $sql = ' SELECT 
-                        IF(`articulos_resta`.`resta` > -1000,SUM(`renglones`.`cantidad`)-`articulos_resta`.`resta`,SUM(`renglones`.`cantidad`)) as cantidad,`renglones`.`articulo_id`,`articulos`.`nombre` as nombre_articulo
+                        IF(`articulos_resta`.`resta` > -1000,SUM(`renglones`.`cantidad`)-`articulos_resta`.`resta`,SUM(`renglones`.`cantidad`)) as cantidad,`renglones`.`articulo_id`,`articulos`.`nombre` as nombre_articulo , `rubros`.`nombre` as "nombre_rubro" , `rubros`.`id` as "rubro_id"
                         FROM `inventory_renglones` as `renglones` INNER JOIN `inventory_cabecera` as `cabecera` ON `cabecera`.`id`=`renglones`.`cabecera_id` INNER JOIN `articles` as `articulos` ON `renglones`.`articulo_id`=`articulos`.`id` LEFT JOIN 
                             (SELECT SUM(`renglones1`.`cantidad`) as resta,`renglones1`.`articulo_id` 
                             FROM `inventory_renglones` as `renglones1` , `inventory_cabecera` 
                             WHERE `inventory_cabecera`.`id` = `renglones1`.`cabecera_id` AND `inventory_cabecera`.`tipo_accion`= "VENTA" GROUP BY `renglones1`.`articulo_id`) as `articulos_resta` 
-                            ON `articulos_resta`.`articulo_id`=`renglones`.`articulo_id` WHERE `cabecera`.`tipo_accion`!= "VENTA"  ';
+                            ON `articulos_resta`.`articulo_id`=`renglones`.`articulo_id` RIGHT JOIN `rubros` ON `articulos`.`rubro_id` = `rubros`.`id` WHERE `cabecera`.`tipo_accion`!= "VENTA"  ';
                 if($page && is_int($page)){
                     $form = ($limit*$page)-$limit;
 				    $to = $limit*$page;
@@ -56,8 +61,11 @@ class InventoryController extends ApiResponseController
                 if($fecha){
                     $sql .= " AND cabecera.fecha <= '".$fecha."'";
                 }
+                if(!empty($rubro_id) && $rubro_id != "all"){
+                    $sql .= " AND `rubros`.`id` = ".$rubro_id;
+
+                }
                 $sql = $sql.$group_by.$limit_sql;
-                
                 $inventory_all = DB::select($sql);
                 $links = array();
                 $cantidad = DB::select("SELECT COUNT(FOUND_ROWS()) AS `cantidad` FROM inventory_renglones");
